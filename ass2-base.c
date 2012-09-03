@@ -8,6 +8,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "shaders.h"
 #include "sdl-base.h"
@@ -54,7 +55,14 @@ static struct {
 	int lighting;
 	int shaders;
 	int osd;
+	int object;
 } renderstate;
+
+enum Object {
+  TORUS, SPHERE, WAVE, OBJECT_MAX
+};
+
+char object_names[3][8] = { "Torus", "Sphere", "Wave" };
 
 /* Light and materials */
 static float light0_position[] = {2.0, 2.0, 2.0, 0.0};
@@ -88,7 +96,18 @@ void regenerate_geometry()
 	fflush(stdout);
 
 	/* Generate the new object. NOTE: different equations require different arguments. see objects.h */
-	object = createObject(parametricSphere, subdivs + 1, subdivs + 1, 1.0, 0.5, 0.4);
+
+	switch (renderstate.object) {
+		case TORUS:
+			object = createObject(parametricTorus, subdivs + 1, subdivs + 1, 1.0, 0.5);
+			break;
+		case SPHERE:
+			object = createObject(parametricSphere, subdivs + 1, subdivs + 1, 1.0);
+			break;
+		default:
+			assert(renderstate.object == WAVE);
+			object = createObject(parametricWave, subdivs + 1, subdivs + 1, 2.0, 2.0);
+	}
 
 	printf("done.\n");
 	fflush(stdout);
@@ -215,7 +234,7 @@ void draw_osd(SDL_Surface *surface)
 			"[w]   - wireframe: %s\n", //enabled/disabled
 			"todo", // wave animation
 			"todo",   // shading
-			"sphere",   // model
+			object_names[renderstate.object],   // model
 			0,          // shininess
 			/* lighting */
 			renderstate.lighting ? "enabled" : "disabled",
@@ -291,6 +310,11 @@ void event(SDL_Event *event)
 		{
 		case SDLK_ESCAPE:
 			quit();
+			break;
+		case SDLK_g:
+			renderstate.object = (renderstate.object + 1) % OBJECT_MAX;
+			printf("Object %s\n", object_names[renderstate.object]);
+			regenerate_geometry();
 			break;
 		case SDLK_s:
 			renderstate.shaders = !renderstate.shaders;

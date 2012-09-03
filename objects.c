@@ -48,6 +48,36 @@ vertex_t parametricTorus(float u, float v, va_list* args)
 	return ret;
 }
 
+vertex_t parametricWave(float u, float v, va_list* args)
+{
+	/* http://mathworld.wolfram.com/Torus.html */
+	float width, height;
+	float pi = acosf(-1.0f);
+	float theta = pi * 5 * u;
+	float phi = pi * 5 * v;
+	float a, b, c, m;
+	vertex_t ret;
+
+	width = va_arg(*args, double);
+	height = va_arg(*args, double);
+
+	a = 1;
+	b = sin(phi) * cos(theta);
+	c = cos(phi) * sin(theta);
+
+	m = sqrt((a * a) + (b * b) + (c * c));
+
+	ret.norm.x = b / m;
+	ret.norm.y = c / m;
+	ret.norm.z = a / m;
+
+	ret.vert.x = (1.0f - u) * width;
+	ret.vert.y = v * height;
+	ret.vert.z = 0.1 * sinf(phi) * sinf(theta);
+
+	return ret;
+}
+
 Object* createObject(ParametricObjFunc paramObjFunc, int x, int y, ...)
 {
 	va_list args;

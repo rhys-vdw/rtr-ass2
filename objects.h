@@ -32,6 +32,7 @@ typedef vertex_t (*ParametricObjFunc)(float, float, va_list*);
 
 vertex_t parametricSphere(float u, float v, va_list* args); /* args: radius */
 vertex_t parametricTorus(float u, float v, va_list* args); /* args: inner-radius, outer-radius */
+vertex_t parametricWave(float u, float v, va_list* args); /* args: width, height */
 
 /*
 USAGE:
