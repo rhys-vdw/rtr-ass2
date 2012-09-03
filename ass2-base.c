@@ -18,6 +18,8 @@
 #define CAMERA_MOUSE_X_VELOCITY 0.3	 /* Degrees per mouse unit */
 #define CAMERA_MOUSE_Y_VELOCITY 0.3	 /* Degrees per mouse unit */
 
+#define TEXT_HEIGHT 20
+
 #ifndef min
 #define min(a, b) ((a)>(b)?(b):(a))
 #endif
@@ -51,6 +53,7 @@ static struct {
 	int wireframe;
 	int lighting;
 	int shaders;
+	int osd;
 } renderstate;
 
 /* Light and materials */
@@ -77,17 +80,16 @@ void regenerate_geometry()
 {
 	int subdivs;
 	subdivs = 1 << (tessellation);
-	
+
 	/* Free previous object */
-	if (object) 
-		freeObject(object);
-	
+	if (object) freeObject(object);
+
 	printf("Generating %ix%i... ", subdivs, subdivs);
 	fflush(stdout);
-	
+
 	/* Generate the new object. NOTE: different equations require different arguments. see objects.h */
 	object = createObject(parametricSphere, subdivs + 1, subdivs + 1, 1.0, 0.5, 0.4);
-	
+
 	printf("done.\n");
 	fflush(stdout);
 }
@@ -129,9 +131,10 @@ void init()
 	renderstate.wireframe = 0;
 	renderstate.lighting = 1;
 	renderstate.shaders = 0;
+	renderstate.osd = 1;
 
 	update_renderstate();
-	
+
 	regenerate_geometry();
 }
 
@@ -146,13 +149,12 @@ void reshape(int width, int height)
 	glMatrixMode(GL_MODELVIEW);
 }
 
-void draw_framerate(SDL_Surface *surface)
+void draw_text(SDL_Surface *surface, char *text, int x, int y)
 {
+  char *textPtr;
 	/* Write framerate to a string */
-	char buffer[32];
-	char *bufp;
-	snprintf(buffer, sizeof buffer, "FR: %d", frame_rate);
-	
+  int lineCount = 1;
+
 	glPushAttrib(GL_ENABLE_BIT);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_LIGHTING);
@@ -168,9 +170,15 @@ void draw_framerate(SDL_Surface *surface)
 	glLoadIdentity();
 
 	/* Draw the string */
-	glRasterPos2i(10, surface->h - 20);
-	for (bufp = buffer; *bufp; bufp++)
-		glutBitmapCharacter(GLUT_BITMAP_9_BY_15, *bufp);
+	glRasterPos2i(x, surface->h - y - TEXT_HEIGHT);
+	for (textPtr = text; *textPtr; textPtr++) {
+		if (*textPtr == '\n') {
+			lineCount++;
+			glRasterPos2i(x, surface->h - y - (lineCount * TEXT_HEIGHT));
+		} else {
+			glutBitmapCharacter(GLUT_BITMAP_9_BY_15, *textPtr);
+		}
+	}
 
 	glPopMatrix();	/* Pop modelview */
 	glMatrixMode(GL_PROJECTION);
@@ -179,6 +187,34 @@ void draw_framerate(SDL_Surface *surface)
 	glMatrixMode(GL_MODELVIEW);
 
 	glPopAttrib();
+}
+
+void draw_framerate(SDL_Surface *surface)
+{
+	char buffer[32];
+	snprintf(buffer, sizeof buffer, "FR: %d\n", frame_rate);
+	draw_text(surface, buffer, 0, 0);
+}
+
+void draw_osd(SDL_Surface *surface)
+{
+	char buffer[1024];
+	snprintf(buffer, sizeof buffer,
+			"[a]   - wave animation\n" //toggle wave animation
+			"[f]   - shading\n" //smooth/flat
+			"[g]   - model\n" //torus, wave
+			"[H/h] - shininess\n" //increase/decrease
+			"[l]   - lighting\n" //toggle
+			"[m]   - specular lighting model\n" //Blinn-Phong or Phong
+			"[n]   - normals\n" //enabled/disabled
+			"[o]   - OSD option\n" //cycle through
+			"[p]   - lighting mode\n" //per vertex/per pixel
+			"[s]   - shaders\n"
+			"[T/t] - tesselation\n" //increase/decrease
+			"[v]   - local viewer\n"
+			"[w]   - wireframe\n" //enabled/disabled
+			);
+	draw_text(surface, buffer, 0, 30);
 }
 
 void display(SDL_Surface *surface)
@@ -203,6 +239,7 @@ void display(SDL_Surface *surface)
 
 	/* Draw framerate */
 	draw_framerate(surface);
+	if (renderstate.osd) draw_osd(surface);
 
 	CHECKERROR;
 }
@@ -248,6 +285,11 @@ void event(SDL_Event *event)
 			printf("Lighting %i\n", renderstate.lighting);
 			update_renderstate();
 			break;
+		case SDLK_o:
+			renderstate.osd = !renderstate.osd;
+			printf("OSD %i\n", renderstate.osd);
+			update_renderstate();
+			break;
 		case SDLK_w:
 			renderstate.wireframe = !renderstate.wireframe;
 			printf("Wireframe %i\n", renderstate.wireframe);
@@ -256,13 +298,13 @@ void event(SDL_Event *event)
 		case SDLK_t:
 			if ((key_state[SDLK_LSHIFT] || key_state[SDLK_RSHIFT]))
 			{
-				if (tessellation < max_tess) 
+				if (tessellation < max_tess)
 				{
 					++tessellation;
 					regenerate_geometry();
-				} 
+				}
 			}
-			else 
+			else
 			{
 				if (tessellation > min_tess)
 				{
@@ -315,8 +357,8 @@ void cleanup()
 {
 	/* Delete the shader */
 	glDeleteProgram(shader);
-	
+
 	/* Free object data */
-	if (object) 
+	if (object)
 		freeObject(object);
 }

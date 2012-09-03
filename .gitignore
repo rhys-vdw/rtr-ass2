@@ -14,3 +14,6 @@
 # Vim temporay files
 *.swo
 *.swp
+
+# Executable
+ass2-base
