@@ -200,19 +200,35 @@ void draw_osd(SDL_Surface *surface)
 {
 	char buffer[1024];
 	snprintf(buffer, sizeof buffer,
-			"[a]   - wave animation\n" //toggle wave animation
-			"[f]   - shading\n" //smooth/flat
-			"[g]   - model\n" //torus, wave
-			"[H/h] - shininess\n" //increase/decrease
-			"[l]   - lighting\n" //toggle
-			"[m]   - specular lighting model\n" //Blinn-Phong or Phong
-			"[n]   - normals\n" //enabled/disabled
-			"[o]   - OSD option\n" //cycle through
-			"[p]   - lighting mode\n" //per vertex/per pixel
-			"[s]   - shaders\n"
-			"[T/t] - tesselation\n" //increase/decrease
-			"[v]   - local viewer\n"
-			"[w]   - wireframe\n" //enabled/disabled
+			"[a]   - wave animation: %s\n" //toggle wave animation
+			"[f]   - shading: %s\n" //smooth/flat
+			"[g]   - model: %s\n" //torus, wave
+			"[H/h] - shininess: %d\n" //increase/decrease
+			"[l]   - lighting: %s\n" //toggle
+			"[m]   - specular lighting model: %s\n" //Blinn-Phong or Phong
+			"[n]   - normals: %s\n" //enabled/disabled
+			"[o]   - OSD option: %s\n" //cycle through
+			"[p]   - lighting mode: %s\n" //per vertex/per pixel
+			"[s]   - shaders: %s\n"
+			"[T/t] - tessellation: %d\n" //increase/decrease
+			"[v]   - local viewer: %s\n"
+			"[w]   - wireframe: %s\n", //enabled/disabled
+			"todo", // wave animation
+			"todo",   // shading
+			"sphere",   // model
+			0,          // shininess
+			/* lighting */
+			renderstate.lighting ? "enabled" : "disabled",
+			"todo", // specular lighting model
+			"todo", // normals
+			"enabled", // OSD option
+			"todo", // lighting mode
+			/* shaders */
+			renderstate.shaders ? "enabled" : "disabled", // shaders
+			tessellation,
+			"todo", // local viewer
+			/* wireframe */
+			renderstate.wireframe ? "enabled" : "disabled"
 			);
 	draw_text(surface, buffer, 0, 30);
 }
