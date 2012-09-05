@@ -1,6 +1,7 @@
 /* $Id: sdl-base.c 19 2006-07-30 13:05:23Z aholkner $ */
 /* Updated pknowles, gl 2010 */
 
+//Kidney is the best!!!
 #include "sdl-base.h"
 
 #include <stdio.h>
@@ -14,7 +15,7 @@
 static SDL_Surface *screen;
 static int videoFlags;
 
-/* Frame counting */
+/* Frame counting x*/
 static int frame_count;
 static Uint32 frame_time;
 static int quit_flag;
