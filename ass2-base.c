@@ -58,6 +58,7 @@ static struct {
 	int object;
 	int lightType; //direction lighting / point light
 	int lightModel;
+	int shading;
 } renderstate;
 
 enum Object {
@@ -89,7 +90,10 @@ void update_renderstate()
 	else
 		glDisable(GL_LIGHTING);
 
-	
+	if (renderstate.shading)
+		glShadeModel(GL_SMOOTH);
+	else
+		glShadeModel(GL_FLAT);
 
 	glPolygonMode(GL_FRONT_AND_BACK, renderstate.wireframe ? GL_LINE : GL_FILL);
 
@@ -168,6 +172,7 @@ void init()
 	renderstate.osd = 1;
 	renderstate.lightType = 1;
 	renderstate.lightModel = 1;
+	renderstate.shading = 1;
 
 	update_renderstate();
 
@@ -316,6 +321,7 @@ void display(SDL_Surface *surface)
 
 void update(int milliseconds)
 {
+	
 }
 
 void set_mousestate(unsigned char button, int state)
@@ -354,6 +360,11 @@ void event(SDL_Event *event)
 		case SDLK_s:
 			renderstate.shaders = !renderstate.shaders;
 			printf("Using Shaders %i\n", renderstate.shaders);
+			break;
+		case SDLK_f:
+			renderstate.shading = !renderstate.shading;
+			printf("Changed shading mode %i\n", renderstate.shading);
+			update_renderstate();
 			break;
 		case SDLK_l:
 			renderstate.lighting = !renderstate.lighting;
