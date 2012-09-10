@@ -78,6 +78,9 @@ static float material_diffuse[] = {1.0, 0.0, 0.0, 1.0};
 static float material_specular[] = {1.0, 1.0, 1.0, 1.0};
 static float material_shininess = 64;
 
+//time
+static double time_s;
+
 void update_renderstate()
 {
 	if (renderstate.lightModel)
@@ -122,7 +125,7 @@ void regenerate_geometry()
 			break;
 		default:
 			assert(renderstate.object == WAVE);
-			object = createObject(parametricWave, subdivs + 1, subdivs + 1, 2.0, 2.0);
+			object = createObject(parametricWave, subdivs + 1, subdivs + 1, 2.0, 2.0, time_s);
 	}
 
 	printf("done.\n");
@@ -319,9 +322,16 @@ void display(SDL_Surface *surface)
 	CHECKERROR;
 }
 
+
+
 void update(int milliseconds)
 {
+	static long time_ms = 0;
+	time_ms += milliseconds;
 	
+	time_s = (double) time_ms / 1000.0f;
+	if (renderstate.object == WAVE)
+		regenerate_geometry();
 }
 
 void set_mousestate(unsigned char button, int state)

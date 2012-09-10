@@ -50,7 +50,7 @@ vertex_t parametricTorus(float u, float v, va_list* args)
 
 vertex_t parametricWave(float u, float v, va_list* args)
 {
-	float width, height;
+	float width, height, time;
 	float pi = acosf(-1.0f);
 	float phi = pi * 5 * u;
 	float theta = pi * 5 * v;
@@ -59,10 +59,11 @@ vertex_t parametricWave(float u, float v, va_list* args)
 	float amp = .2;// anim = 1;
 	width = va_arg(*args, double);
 	height = va_arg(*args, double);
+	time = va_arg(*args, double);
 
-
+	//printf("%f\n",time);
 		//first vertex start
-			z = amp*(sin(theta)*sin(phi));
+			z = amp*(sin(theta+time)*sin(phi+time));
 			//normals for vertex 1
 			x = -amp*cos(theta)*sin(phi);
 			y = amp*sin(theta)*cos(phi);
@@ -78,55 +79,6 @@ vertex_t parametricWave(float u, float v, va_list* args)
 
 
 	return ret;
-}
-
-void drawGrid()
-{
-	float pi = acosf(-1.0f);
-	float i;
-	float j;
-	float y;
-	float x;
-	float z;
-	float m;
-	//int offset = -GRID_SIZE/2;
-	//float anim = 1;
-	glColor4f(0, 0, 1,1);
-	float incr = .1;
-	float amp = .05;
-	float freq = 10;
-
-	for (j = -1; j <= 1; j += incr)//creates strips from beginning to end
-	{
-	glBegin(GL_TRIANGLE_STRIP);
-		for (i = -3; i <= -1; i += incr)//creates a strip from beginning to end
-		{
-		//first vertex start
-			y = pi*amp*(sin(freq*i)*sin(freq*j));
-			//normals for vertex 1
-			x = -pi*amp*cos(freq*i)*sin(freq*j);
-			z = -pi*amp*sin(freq*i)*cos(freq*j);
-			m = sqrt(x*x+z*z+1);
-			glNormal3f(x/m,z/m,1/m);
-			//end normals for vertex 1
-			glVertex3f(i,j,y);
-		//first vertex end
-		//second vertex start - same as above but incremented to create a increment wide strip
-			y =	pi*amp*(sin(freq*i)*sin(freq*(j+incr)));
-			//normals for vertex 2
-			x = -pi*amp*cos(freq*i)*sin(freq*(j+incr));
-			z = -pi*amp*sin(freq*i)*cos(freq*(j+incr));
-
-			m = sqrt(x*x+z*z+1);
-			glNormal3f(x/m,z/m,1/m);
-			//end normals for vertex 2
-			glVertex3f(i,j+incr,y);
-		//second vertex end
-		}
-printf("nx: %f, ny: %f, nz: %f", x, z, 1/m);
-	glEnd();
-	}
-
 }
 
 void drawAxes(float x,float y,float z,float length)
