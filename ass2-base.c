@@ -270,7 +270,7 @@ void display(SDL_Surface *surface)
 	if (renderstate.shaders)
 		glUseProgram(shader); /* Use our shader for future rendering */
 	drawObject(object);
-	//drawGrid();
+	//drawGrid();Test Grid to compare normals against current Grid
 	glUseProgram(0);
 
 	/* Draw framerate */
