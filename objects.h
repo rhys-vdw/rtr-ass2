@@ -25,6 +25,7 @@ typedef struct {
 typedef struct ObjectType {
 	GLuint vertexBuffer;
 	GLuint elementBuffer;
+  int numVertices;
 	int numElements;
 } Object;
 
@@ -40,6 +41,7 @@ myobject = createObject(<a parametric function from the list above>, <tessellati
 */
 Object* createObject(ParametricObjFunc parametric, int x, int y, ...);
 void drawObject(Object* obj);
+void drawNormals(Object* obj);
 void freeObject(Object* obj);
 
 #endif

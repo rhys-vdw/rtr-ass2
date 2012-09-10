@@ -140,6 +140,7 @@ Object* createObject(ParametricObjFunc paramObjFunc, int x, int y, ...)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	
 	/* Cleanup and return the object struct */
+  obj->numVertices = numVertices;
 	obj->numElements = numIndices;
 	free(vertices);
 	free(indices);
@@ -164,6 +165,27 @@ void drawObject(Object* obj)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glDisableClientState(GL_VERTEX_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
+}
+
+void drawNormals(Object* obj)
+{
+	/* Enable vertex arrays and bind VBOs */
+	glEnableClientState(GL_VERTEX_ARRAY);
+	//glEnableClientState(GL_NORMAL_ARRAY);
+	glBindBuffer(GL_ARRAY_BUFFER, obj->vertexBuffer);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj->elementBuffer);
+	
+	/* Draw object */
+	glVertexPointer(3, GL_FLOAT, 0, (void *) 0);
+	//glNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)sizeof(vector_t));
+	//glDrawArray(GL_LINES, obj->numVertices * 2, GL_UNSIGNED_INT, (void*)0);
+	glDrawArrays(GL_LINES, 0, obj->numVertices * 2);
+	
+	/* Unbind/disable arrays. could also push/pop enables */
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glDisableClientState(GL_VERTEX_ARRAY);
+	//glDisableClientState(GL_NORMAL_ARRAY);
 }
 
 void freeObject(Object* obj)
