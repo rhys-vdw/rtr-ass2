@@ -109,16 +109,20 @@ void regenerate_geometry()
 
 	/* Generate the new object. NOTE: different equations require different arguments. see objects.h */
 
-	switch (renderstate.object) {
-		case TORUS:
-			object = createObject(parametricTorus, subdivs + 1, subdivs + 1, 1.0, 0.5);
-			break;
-		case SPHERE:
-			object = createObject(parametricSphere, subdivs + 1, subdivs + 1, 1.0);
-			break;
-		default:
-			assert(renderstate.object == WAVE);
-			object = createObject(parametricWave, subdivs + 1, subdivs + 1, 2.0, 2.0);
+	if (renderstate.shaders) {
+		object = createObject(parametricGrid, subdivs + 1, subdivs + 1);
+	} else {
+		switch (renderstate.object) {
+			case TORUS:
+				object = createObject(parametricTorus, subdivs + 1, subdivs + 1, 1.0, 0.5);
+				break;
+			case SPHERE:
+				object = createObject(parametricSphere, subdivs + 1, subdivs + 1, 1.0);
+				break;
+			default:
+				assert(renderstate.object == WAVE);
+				object = createObject(parametricWave, subdivs + 1, subdivs + 1, 2.0, 2.0);
+		}
 	}
 
 	printf("done.\n");
@@ -353,6 +357,7 @@ void event(SDL_Event *event)
 			break;
 		case SDLK_s:
 			renderstate.shaders = !renderstate.shaders;
+			regenerate_geometry();
 			printf("Using Shaders %i\n", renderstate.shaders);
 			break;
 		case SDLK_l:

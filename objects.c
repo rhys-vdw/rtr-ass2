@@ -80,7 +80,7 @@ vertex_t parametricWave(float u, float v, va_list* args)
 	return ret;
 }
 
-vertex_t paramtericGrid(float u, float v, va_list *args) {
+vertex_t parametricGrid(float u, float v, va_list *args) {
 	vertex_t ret;
 
 	ret.vert.x = u;
