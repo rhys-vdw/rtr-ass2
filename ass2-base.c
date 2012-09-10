@@ -56,7 +56,8 @@ static struct {
 	int shaders;
 	int osd;
 	int object;
-	int lightMode; //direction lighting / point light
+	int lightType; //direction lighting / point light
+	int lightModel;
 } renderstate;
 
 enum Object {
@@ -78,10 +79,12 @@ static float material_shininess = 64;
 
 void update_renderstate()
 {
-	if (renderstate.lighting)
-		glEnable(GL_LIGHTING);
+	if (renderstate.lightModel)
+		glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
 	else
-		glDisable(GL_LIGHTING);
+		glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 0.0);
+
+	
 
 	glPolygonMode(GL_FRONT_AND_BACK, renderstate.wireframe ? GL_LINE : GL_FILL);
 
@@ -131,6 +134,8 @@ void init()
 	glClearColor(0, 0, 0, 0);
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_DEPTH_TEST);
+
+	
 	glEnable(GL_LIGHT0);
 
 	//glLightfv(GL_LIGHT0, GL_AMBIENT, light0_ambient);
@@ -156,7 +161,8 @@ void init()
 	renderstate.lighting = 1;
 	renderstate.shaders = 0;
 	renderstate.osd = 1;
-	renderstate.lightMode = 1;
+	renderstate.lightType = 1;
+	renderstate.lightModel = 1;
 
 	update_renderstate();
 
@@ -252,10 +258,10 @@ void draw_osd(SDL_Surface *surface)
 			/* shaders */
 			renderstate.shaders ? "enabled" : "disabled", // shaders
 			tessellation,
-			"todo", // local viewer
+			renderstate.lightModel ? "enabled" : "disabled", // local viewer
 			/* wireframe */
 			renderstate.wireframe ? "enabled" : "disabled",
-			renderstate.lightMode ? "directional" : "point"
+			renderstate.lightType ? "directional" : "point"
 			);
 	draw_text(surface, buffer, 0, 30);
 }
@@ -271,7 +277,7 @@ void display(SDL_Surface *surface)
 
 	/* Set the light position (gets multiplied by the modelview matrix) */
 	//glLightfv(GL_LIGHT0, GL_POSITION, light0_position);
-	if (renderstate.lightMode)
+	if (renderstate.lightType)
 		glLightfv(GL_LIGHT0, GL_POSITION, light0_directional);
 	else
 		glLightfv(GL_LIGHT0, GL_POSITION, light0_point);
@@ -352,8 +358,13 @@ void event(SDL_Event *event)
 			update_renderstate();
 			break;
 		case SDLK_k:
-			renderstate.lightMode = !renderstate.lightMode;
-			printf("Light Mode %i\n", renderstate.lightMode);
+			renderstate.lightType = !renderstate.lightType;
+			printf("Light Mode %i\n", renderstate.lightType);
+			update_renderstate();
+			break;
+		case SDLK_v:
+			renderstate.lightModel = !renderstate.lightModel;
+			printf("Local Viewer %i\n", renderstate.lightModel);
 			update_renderstate();
 			break;
 		case SDLK_t:
@@ -377,7 +388,6 @@ void event(SDL_Event *event)
 		case SDLK_h:
 			if ((key_state[SDLK_LSHIFT] || key_state[SDLK_RSHIFT]))
 			{
-
 				if (material_shininess < 128)
 				{
 					printf("keypress\n");
@@ -388,7 +398,6 @@ void event(SDL_Event *event)
 			}
 			else
 			{
-				
 				if (material_shininess > 16)
 				{
 					printf("keypress\n");
