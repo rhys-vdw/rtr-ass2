@@ -123,7 +123,7 @@ void init()
 	glewInit();
 
 	/* Load the shader */
-	shader = getShader("phong.vert", "shader.frag");
+	shader = getShader("blinn-phong.vert", "shader.frag");
 
 	/* Lighting and colours */
 	glClearColor(0, 0, 0, 0);
