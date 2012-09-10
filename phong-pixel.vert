@@ -1,8 +1,15 @@
-// blinn-phong vertex shader
+// phong vertex shader
 // assumes single directional light
+
+/*
+varying vec3 normal;
+varying vec3 light;
+varying vec3 eye;
+*/
 
 void main(void)
 {
+	/*
 	vec4 color = vec4(0.0);
 
 	// normalized vertex normal
@@ -21,21 +28,23 @@ void main(void)
 	// add diffuse component
 	if (NdotL > 0.0)
 	{
-		// add diffuse color
 		color += NdotL * gl_FrontMaterial.diffuse * gl_LightSource[0].diffuse;
 
 		// unit vector from eye to vertex
 		vec3 eye = normalize(vec3(gl_ModelViewMatrix * gl_Vertex));
 
-		// add specular color
-		float NdotHV = max(dot(normal, gl_LightSource[0].halfVector.xyz), 0.0);
-		color += gl_FrontMaterial.specular * gl_LightSource[0].specular *
-			pow(NdotHV, gl_FrontMaterial.shininess);
-	}
+		// calculate reflection vector
+		vec3 reflection = reflect(light, normal);
+		float RdotE = max(dot(reflection, eye), 0.0);
 
+		color += pow(RdotE, gl_FrontMaterial.shininess) *
+			gl_LightSource[0].specular * gl_FrontMaterial.specular;
+	}
+	
 	// set the color
 	gl_FrontColor = color;
-
+	*/
+	
 	// apply matrix transforms to vertex position
 	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 }
