@@ -1,8 +1,6 @@
 // blinn-phong vertex shader
 // assumes single directional light
 
-uniform float shininess;
-
 void main(void)
 {
 	vec4 color = vec4(0.0);

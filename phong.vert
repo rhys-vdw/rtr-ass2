@@ -33,10 +33,10 @@ void main(void)
 		color += pow(RdotE, gl_FrontMaterial.shininess) *
 			gl_LightSource[0].specular * gl_FrontMaterial.specular;
 	}
-	
+
 	// set the color
 	gl_FrontColor = color;
-	
+
 	// apply matrix transforms to vertex position
 	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 }
