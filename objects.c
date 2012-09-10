@@ -129,6 +129,23 @@ printf("nx: %f, ny: %f, nz: %f", x, z, 1/m);
 
 }
 
+void drawAxes(float x,float y,float z,float length)
+{
+	glDisable(GL_LIGHTING);
+	glBegin(GL_LINES);
+		glColor3f(1, 0, 0);
+		glVertex3f(x,y, z);
+		glVertex3f(x+length,y, z);
+		glColor3f(0, 1, 0);
+		glVertex3f(x,y, z);
+		glVertex3f(x,y+length, z);
+		glColor3f(0, 0, 1);
+		glVertex3f(x,y, z);
+		glVertex3f(x,y, z+length);
+	glEnd();
+	glEnable(GL_LIGHTING);
+}
+
 Object* createObject(ParametricObjFunc paramObjFunc, int x, int y, ...)
 {
 	va_list args;
