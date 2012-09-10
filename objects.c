@@ -50,32 +50,102 @@ vertex_t parametricTorus(float u, float v, va_list* args)
 
 vertex_t parametricWave(float u, float v, va_list* args)
 {
-	/* http://mathworld.wolfram.com/Torus.html */
 	float width, height;
 	float pi = acosf(-1.0f);
 	float theta = pi * 5 * u;
 	float phi = pi * 5 * v;
-	float a, b, c, m;
+	float x, y, z, m;
 	vertex_t ret;
-
+	float amp = .2;// anim = 1;
 	width = va_arg(*args, double);
 	height = va_arg(*args, double);
 
-	a = 1;
-	b = sin(phi) * cos(theta);
-	c = cos(phi) * sin(theta);
 
-	m = sqrt((a * a) + (b * b) + (c * c));
+		//first vertex start
+			z = amp*(sin(phi)*sin(theta));
+			//normals for vertex 1
+			x = -amp*cos(phi)*sin(theta);
+			y = -amp*sin(phi)*cos(theta);	
+			m = sqrt(x*x+y*y+1);
 
-	ret.norm.x = b / m;
-	ret.norm.y = c / m;
-	ret.norm.z = a / m;
+	ret.norm.x = x / m;
+	ret.norm.y = y / m;
+	ret.norm.z = 1 / m;
+			//end normals for vertex 1
+	ret.vert.x = (1.0f - u) * width - 1;
+	ret.vert.y = v * height -1;
+	ret.vert.z = z;
 
-	ret.vert.x = (1.0f - u) * width;
-	ret.vert.y = v * height;
-	ret.vert.z = 0.1 * sinf(phi) * sinf(theta);
 
 	return ret;
+}
+
+void drawGrid()
+{
+	float pi = acosf(-1.0f);
+	float i;
+	float j;
+	float y;
+	float x;
+	float z;
+	float m;
+	//int offset = -GRID_SIZE/2;
+	float anim = 1;
+	glColor4f(0, 0, 1,1);
+	float incr = .2;
+	float amp = .2;
+
+	for (j = -4; j <= 4; j += incr)//creates strips from beginning to end
+	{	
+	glBegin(GL_TRIANGLE_STRIP);	
+		for (i = -4; i <= 4; i += incr)//creates a strip from beginning to end
+		{
+		//first vertex start
+			y = pi*amp*(sin(i+anim)*sin(j+anim));
+			//normals for vertex 1
+			x = -pi*amp*cos(i+anim)*sin(j+anim);
+			z = -pi*amp*sin(i+anim)*cos(j+anim);	
+			m = sqrt(x*x+z*z+1);
+			glNormal3f(x/m,z/m,1/m);
+			//end normals for vertex 1
+			glVertex3f(i,j,y);
+		//first vertex end
+		//second vertex start - same as above but incremented to create a increment wide strip
+			y =	pi*amp*(sin(i+anim)*sin(j+incr+anim));
+			//normals for vertex 2
+			x = -pi*amp*cos(i+anim)*sin(j+incr+anim);
+			z = -pi*amp*sin(i+anim)*cos(j+incr+anim);
+			
+			m = sqrt(x*x+z*z+1);
+			glNormal3f(x/m,z/m,1/m);
+			//end normals for vertex 2
+			glVertex3f(i,j+incr,y);
+		//second vertex end
+		}
+printf("nx: %f, ny: %f, nz: %f", x, z, 1/m);
+	glEnd();
+	}
+/*
+	//	Drawing Normals
+	glDisable(GL_LIGHTING);
+	glColor3f(1, 1, 1);//make em white
+	if (normals == TRUE)
+	{
+		for (j = offset; j <= GRID_SIZE+offset; j += incr) // x
+		{	
+			glBegin(GL_LINES);	
+			for (i = offset; i <= GRID_SIZE+offset+incr; i += incr)
+			{
+				y = pi*AMP*(sin(i+anim)*sin(j+anim));//work out how high to start
+				glVertex3f(i,y,j);//puts the first vertex on the same point as the grid
+				x = i-pi*AMP*cos(i+anim)*sin(j+anim);//works out the normal's x
+				z = j-pi*AMP*sin(i+anim)*cos(j+anim);//works out the normal's z
+				glVertex3f(x,y+1,z); //point + normal
+			}
+		glEnd();
+		}
+	}//Finished Drawing Normals*/
+	glEnable(GL_LIGHTING);
 }
 
 Object* createObject(ParametricObjFunc paramObjFunc, int x, int y, ...)
