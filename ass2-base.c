@@ -56,6 +56,7 @@ static struct {
 	int shaders;
 	int osd;
 	int object;
+	int lightMode; //direction lighting / point light
 } renderstate;
 
 enum Object {
@@ -65,13 +66,14 @@ enum Object {
 char object_names[3][8] = { "Torus", "Sphere", "Wave" };
 
 /* Light and materials */
-static float light0_position[] = {2.0, 2.0, 2.0, 0.0};
-static float light0_ambient[] = {0.5, 0.5, 0.5, 1.0};
-static float light0_diffuse[] = {1.0, 1.0, 1.0, 1.0};
-static float light0_specular[] = {1.0, 1.0, 1.0, 1.0};
+static float light0_directional[] = {2.0, 2.0, 2.0, 0.0};
+static float light0_point[]= {2.0, 2.0, 2.0, 1.0};
+//static float light0_ambient[] = {0.5, 0.5, 0.5, 1.0};//Brief asks for defaults
+//static float light0_diffuse[] = {1.0, 1.0, 1.0, 1.0};
+//static float light0_specular[] = {1.0, 1.0, 1.0, 1.0};
 static float material_ambient[] = {0.5, 0.5, 0.5, 1.0};
 static float material_diffuse[] = {1.0, 0.0, 0.0, 1.0};
-static float material_specular[] = {0.5, 0.5, 0.5, 1.0};
+static float material_specular[] = {1.0, 1.0, 1.0, 1.0};
 static float material_shininess = 50.0;
 
 void update_renderstate()
@@ -128,9 +130,10 @@ void init()
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHT0);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, light0_ambient);
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
-	glLightfv(GL_LIGHT0, GL_SPECULAR, light0_specular);
+
+	//glLightfv(GL_LIGHT0, GL_AMBIENT, light0_ambient);
+	//glLightfv(GL_LIGHT0, GL_DIFFUSE, light0_diffuse);
+	//glLightfv(GL_LIGHT0, GL_SPECULAR, light0_specular);
 	glMaterialfv(GL_FRONT, GL_AMBIENT, material_ambient);
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, material_diffuse);
 	glMaterialfv(GL_FRONT, GL_SPECULAR, material_specular);
@@ -151,6 +154,7 @@ void init()
 	renderstate.lighting = 1;
 	renderstate.shaders = 0;
 	renderstate.osd = 1;
+	renderstate.lightMode = 1;
 
 	update_renderstate();
 
@@ -231,7 +235,8 @@ void draw_osd(SDL_Surface *surface)
 			"[s]   - shaders: %s\n"
 			"[T/t] - tessellation: %d\n" //increase/decrease
 			"[v]   - local viewer: %s\n"
-			"[w]   - wireframe: %s\n", //enabled/disabled
+			"[w]   - wireframe: %s\n" //enabled/disabled
+			"[k]   - light mode: %s\n", //enabled/disabled
 			"todo", // wave animation
 			"todo",   // shading
 			object_names[renderstate.object],   // model
@@ -247,7 +252,8 @@ void draw_osd(SDL_Surface *surface)
 			tessellation,
 			"todo", // local viewer
 			/* wireframe */
-			renderstate.wireframe ? "enabled" : "disabled"
+			renderstate.wireframe ? "enabled" : "disabled",
+			renderstate.lightMode ? "directional" : "point"
 			);
 	draw_text(surface, buffer, 0, 30);
 }
@@ -264,15 +270,19 @@ void display(SDL_Surface *surface)
 	glRotatef(-camera_heading, 0, 1, 0);
 
 	/* Set the light position (gets multiplied by the modelview matrix) */
-	glLightfv(GL_LIGHT0, GL_POSITION, light0_position);
+	//glLightfv(GL_LIGHT0, GL_POSITION, light0_position);
+	if (renderstate.lightMode)
+		glLightfv(GL_LIGHT0, GL_POSITION, light0_directional);
+	else
+		glLightfv(GL_LIGHT0, GL_POSITION, light0_point);
 
 	/* Draw the scene */
 	if (renderstate.shaders)
 		glUseProgram(shader); /* Use our shader for future rendering */
 	drawObject(object);
-  drawNormals(object);
+	//drawNormals(object);
 	drawAxes(0,0,0,2);
-	//drawGrid();Test Grid to compare normals against current Grid
+	//drawGrid();//Test Grid to compare normals against current Grid
 	glUseProgram(0);
 
 	/* Draw framerate */
@@ -336,6 +346,11 @@ void event(SDL_Event *event)
 		case SDLK_w:
 			renderstate.wireframe = !renderstate.wireframe;
 			printf("Wireframe %i\n", renderstate.wireframe);
+			update_renderstate();
+			break;
+		case SDLK_k:
+			renderstate.lightMode = !renderstate.lightMode;
+			printf("Light Mode %i\n", renderstate.lightMode);
 			update_renderstate();
 			break;
 		case SDLK_t:

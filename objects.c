@@ -90,7 +90,7 @@ void drawGrid()
 	float z;
 	float m;
 	//int offset = -GRID_SIZE/2;
-	float anim = 1;
+	//float anim = 1;
 	glColor4f(0, 0, 1,1);
 	float incr = .1;
 	float amp = .05;
