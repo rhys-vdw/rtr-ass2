@@ -14,9 +14,6 @@ void main(void)
 	// already transformed into eye space coordinates by modelview matrix
 	vec3 light = normalize(vec3(gl_LightSource[0].position));
 
-	// unit vector from eye to vertex
-	vec3 eye = normalize(vec3(gl_ModelViewMatrix * gl_Vertex));
-
 	// compute diffuse scalar
 	float NdotL = max(dot(normal, light), 0.0);
 
@@ -29,8 +26,11 @@ void main(void)
 		// add diffuse color
 		color += NdotL * gl_FrontMaterial.diffuse * gl_LightSource[0].diffuse;
 
+		// unit vector from eye to vertex
+		vec3 eye = normalize(vec3(gl_ModelViewMatrix * gl_Vertex));
+
 		// add specular color
-		float NdotHV = max(dot(gl_Normal, gl_LightSource[0].halfVector.xyz), 0.0);
+		float NdotHV = max(dot(normal, gl_LightSource[0].halfVector.xyz), 0.0);
 		color += gl_FrontMaterial.specular * gl_LightSource[0].specular *
 			pow(NdotHV, gl_FrontMaterial.shininess);
 	}
