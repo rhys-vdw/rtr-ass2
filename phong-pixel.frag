@@ -1,11 +1,16 @@
-// phong vertex shader
-// assumes single directional light
+// phong-pixel.frag
 
-void main(void)
+/*
+varying vec3 normal;
+varying vec3 light;
+varying vec3 eye;
+*/
+
+void main (void)
 {
 	vec4 color = vec4(0.0);
 
-	// normalized vertex normal
+	// normalized fragment normal
 	vec3 normal = normalize(vec3(gl_NormalMatrix * gl_Normal));
 
 	// unit vector in direction of light, light source position/direction
@@ -33,11 +38,6 @@ void main(void)
 		color += pow(RdotE, gl_FrontMaterial.shininess) *
 			gl_LightSource[0].specular * gl_FrontMaterial.specular;
 	}
-	
-	// set the color
-	gl_FrontColor = color;
-	
-	// apply matrix transforms to vertex position
-	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
-}
 
+	gl_FragColor = color;
+}

@@ -1,8 +1,15 @@
 // phong vertex shader
 // assumes single directional light
 
+/*
+varying vec3 normal;
+varying vec3 light;
+varying vec3 eye;
+*/
+
 void main(void)
 {
+	/*
 	vec4 color = vec4(0.0);
 
 	// normalized vertex normal
@@ -36,6 +43,7 @@ void main(void)
 	
 	// set the color
 	gl_FrontColor = color;
+	*/
 	
 	// apply matrix transforms to vertex position
 	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
