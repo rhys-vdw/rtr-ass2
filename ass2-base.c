@@ -59,6 +59,7 @@ static struct {
 	int lightType; //direction lighting / point light
 	int lightModel;
 	int shading;
+	int animate;
 } renderstate;
 
 enum Object {
@@ -176,6 +177,8 @@ void init()
 	renderstate.lightType = 1;
 	renderstate.lightModel = 1;
 	renderstate.shading = 1;
+	renderstate.animate = 0;
+
 
 	update_renderstate();
 
@@ -256,10 +259,9 @@ void draw_osd(SDL_Surface *surface)
 			"[s]   - shaders: %s\n"
 			"[T/t] - tessellation: %d\n" //increase/decrease
 			"[v]   - local viewer: %s\n"
-			"[w]   - wireframe: %s\n" //enabled/disabled
-			"[k]   - light mode: %s\n", //enabled/disabled
-			"todo", // wave animation
-			"todo",   // shading
+			"[w]   - wireframe: %s\n", //enabled/disabled
+			renderstate.animate ? "enabled" : "disabled", // shaders, // wave animation
+			renderstate.shading ? "Smooth" : "Flat",   // shading
 			object_names[renderstate.object],   // model
 			(int) material_shininess,          // shininess
 			/* lighting */
@@ -267,15 +269,13 @@ void draw_osd(SDL_Surface *surface)
 			"todo", // specular lighting model
 			"todo", // normals
 			"enabled", // OSD option
-			"todo", // lighting mode
+			renderstate.lightType ? "directional" : "point", // lighting mode
 			/* shaders */
 			renderstate.shaders ? "enabled" : "disabled", // shaders
 			tessellation,
 			renderstate.lightModel ? "enabled" : "disabled", // local viewer
 			/* wireframe */
-			renderstate.wireframe ? "enabled" : "disabled",
-			renderstate.lightType ? "directional" : "point"
-			);
+			renderstate.wireframe ? "enabled" : "disabled");
 	draw_text(surface, buffer, 0, 30);
 }
 
@@ -327,11 +327,12 @@ void display(SDL_Surface *surface)
 void update(int milliseconds)
 {
 	static long time_ms = 0;
-	time_ms += milliseconds;
 	
-	time_s = (double) time_ms / 1000.0f;
-	if (renderstate.object == WAVE)
+	if (renderstate.object == WAVE && renderstate.animate) {
 		regenerate_geometry();
+		time_ms += milliseconds;
+		time_s = (double) time_ms / 1000.0f;
+	}
 }
 
 void set_mousestate(unsigned char button, int state)
@@ -362,6 +363,10 @@ void event(SDL_Event *event)
 		case SDLK_ESCAPE:
 			quit();
 			break;
+		case SDLK_a:
+			renderstate.animate = !renderstate.animate;
+			printf("Wave Animate %i\n", renderstate.animate);
+			break;
 		case SDLK_g:
 			renderstate.object = (renderstate.object + 1) % OBJECT_MAX;
 			printf("Object %s\n", object_names[renderstate.object]);
@@ -391,7 +396,7 @@ void event(SDL_Event *event)
 			printf("Wireframe %i\n", renderstate.wireframe);
 			update_renderstate();
 			break;
-		case SDLK_k:
+		case SDLK_p:
 			renderstate.lightType = !renderstate.lightType;
 			printf("Light Mode %i\n", renderstate.lightType);
 			update_renderstate();
