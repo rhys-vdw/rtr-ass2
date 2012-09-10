@@ -21,13 +21,10 @@ void main (void)
 		// add diffuse component
 		color += NdotL * gl_FrontMaterial.diffuse * gl_LightSource[0].diffuse;
 
-		// calculate reflection vector
-		vec3 reflection = reflect(light, normal);
-		float RdotE = max(dot(reflection, eye), 0.0);
-
 		// add specular color
-		color += pow(RdotE, gl_FrontMaterial.shininess) *
-			gl_LightSource[0].specular * gl_FrontMaterial.specular;
+		float NdotHV = max(dot(normal, gl_LightSource[0].halfVector.xyz), 0.0);
+		color += gl_FrontMaterial.specular * gl_LightSource[0].specular *
+			pow(NdotHV, gl_FrontMaterial.shininess);
 	}
 
 	gl_FragColor = color;
