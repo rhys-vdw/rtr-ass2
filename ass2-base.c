@@ -74,7 +74,7 @@ static float light0_point[]= {2.0, 2.0, 2.0, 1.0};
 static float material_ambient[] = {0.5, 0.5, 0.5, 1.0};
 static float material_diffuse[] = {1.0, 0.0, 0.0, 1.0};
 static float material_specular[] = {1.0, 1.0, 1.0, 1.0};
-static float material_shininess = 50.0;
+static float material_shininess = 64;
 
 void update_renderstate()
 {
@@ -84,6 +84,8 @@ void update_renderstate()
 		glDisable(GL_LIGHTING);
 
 	glPolygonMode(GL_FRONT_AND_BACK, renderstate.wireframe ? GL_LINE : GL_FILL);
+
+	glMaterialf(GL_FRONT, GL_SHININESS, material_shininess);
 }
 
 void regenerate_geometry()
@@ -240,7 +242,7 @@ void draw_osd(SDL_Surface *surface)
 			"todo", // wave animation
 			"todo",   // shading
 			object_names[renderstate.object],   // model
-			0,          // shininess
+			(int) material_shininess,          // shininess
 			/* lighting */
 			renderstate.lighting ? "enabled" : "disabled",
 			"todo", // specular lighting model
@@ -265,9 +267,7 @@ void display(SDL_Surface *surface)
 
 	/* Camera transformation */
 	glLoadIdentity();
-	glTranslatef(0, 0, -camera_zoom);
-	glRotatef(-camera_pitch, 1, 0, 0);
-	glRotatef(-camera_heading, 0, 1, 0);
+
 
 	/* Set the light position (gets multiplied by the modelview matrix) */
 	//glLightfv(GL_LIGHT0, GL_POSITION, light0_position);
@@ -277,6 +277,9 @@ void display(SDL_Surface *surface)
 		glLightfv(GL_LIGHT0, GL_POSITION, light0_point);
 
 	/* Draw the scene */
+	glTranslatef(0, 0, -camera_zoom);
+	glRotatef(-camera_pitch, 1, 0, 0);
+	glRotatef(-camera_heading, 0, 1, 0);
 	if (renderstate.shaders)
 		glUseProgram(shader); /* Use our shader for future rendering */
 	drawObject(object);
@@ -368,6 +371,30 @@ void event(SDL_Event *event)
 				{
 					--tessellation;
 					regenerate_geometry();
+				}
+			}
+			break;
+		case SDLK_h:
+			if ((key_state[SDLK_LSHIFT] || key_state[SDLK_RSHIFT]))
+			{
+
+				if (material_shininess < 128)
+				{
+					printf("keypress\n");
+					material_shininess += 16;
+					glMaterialf(GL_FRONT, GL_SHININESS, material_shininess);
+					printf("shininess: %f\n", material_shininess);
+				}
+			}
+			else
+			{
+				
+				if (material_shininess > 16)
+				{
+					printf("keypress\n");
+					material_shininess -= 16;
+					glMaterialf(GL_FRONT, GL_SHININESS, material_shininess);
+					printf("shininess: %f\n", material_shininess);
 				}
 			}
 			break;
