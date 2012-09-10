@@ -50,32 +50,100 @@ vertex_t parametricTorus(float u, float v, va_list* args)
 
 vertex_t parametricWave(float u, float v, va_list* args)
 {
-	/* http://mathworld.wolfram.com/Torus.html */
 	float width, height;
 	float pi = acosf(-1.0f);
-	float theta = pi * 5 * u;
-	float phi = pi * 5 * v;
-	float a, b, c, m;
+	float phi = pi * 5 * u;
+	float theta = pi * 5 * v;
+	float x, y, z, m;
 	vertex_t ret;
-
+	float amp = .2;// anim = 1;
 	width = va_arg(*args, double);
 	height = va_arg(*args, double);
 
-	a = 1;
-	b = sin(phi) * cos(theta);
-	c = cos(phi) * sin(theta);
 
-	m = sqrt((a * a) + (b * b) + (c * c));
+		//first vertex start
+			z = amp*(sin(theta)*sin(phi));
+			//normals for vertex 1
+			x = -amp*cos(theta)*sin(phi);
+			y = amp*sin(theta)*cos(phi);
+			m = sqrt(x*x+y*y+1);
 
-	ret.norm.x = b / m;
-	ret.norm.y = c / m;
-	ret.norm.z = a / m;
+	ret.norm.x = x / m;
+	ret.norm.y = y / m;
+	ret.norm.z = 1 / m;
+			//end normals for vertex 1
+	ret.vert.x = (1.0f - u) * width - 1;
+	ret.vert.y = v * height -1;
+	ret.vert.z = z;
 
-	ret.vert.x = (1.0f - u) * width;
-	ret.vert.y = v * height;
-	ret.vert.z = 0.1 * sinf(phi) * sinf(theta);
 
 	return ret;
+}
+
+void drawGrid()
+{
+	float pi = acosf(-1.0f);
+	float i;
+	float j;
+	float y;
+	float x;
+	float z;
+	float m;
+	//int offset = -GRID_SIZE/2;
+	float anim = 1;
+	glColor4f(0, 0, 1,1);
+	float incr = .1;
+	float amp = .05;
+	float freq = 10;
+
+	for (j = -1; j <= 1; j += incr)//creates strips from beginning to end
+	{
+	glBegin(GL_TRIANGLE_STRIP);
+		for (i = -3; i <= -1; i += incr)//creates a strip from beginning to end
+		{
+		//first vertex start
+			y = pi*amp*(sin(freq*i)*sin(freq*j));
+			//normals for vertex 1
+			x = -pi*amp*cos(freq*i)*sin(freq*j);
+			z = -pi*amp*sin(freq*i)*cos(freq*j);
+			m = sqrt(x*x+z*z+1);
+			glNormal3f(x/m,z/m,1/m);
+			//end normals for vertex 1
+			glVertex3f(i,j,y);
+		//first vertex end
+		//second vertex start - same as above but incremented to create a increment wide strip
+			y =	pi*amp*(sin(freq*i)*sin(freq*(j+incr)));
+			//normals for vertex 2
+			x = -pi*amp*cos(freq*i)*sin(freq*(j+incr));
+			z = -pi*amp*sin(freq*i)*cos(freq*(j+incr));
+
+			m = sqrt(x*x+z*z+1);
+			glNormal3f(x/m,z/m,1/m);
+			//end normals for vertex 2
+			glVertex3f(i,j+incr,y);
+		//second vertex end
+		}
+printf("nx: %f, ny: %f, nz: %f", x, z, 1/m);
+	glEnd();
+	}
+
+}
+
+void drawAxes(float x,float y,float z,float length)
+{
+	glDisable(GL_LIGHTING);
+	glBegin(GL_LINES);
+		glColor3f(1, 0, 0);
+		glVertex3f(x,y, z);
+		glVertex3f(x+length,y, z);
+		glColor3f(0, 1, 0);
+		glVertex3f(x,y, z);
+		glVertex3f(x,y+length, z);
+		glColor3f(0, 0, 1);
+		glVertex3f(x,y, z);
+		glVertex3f(x,y, z+length);
+	glEnd();
+	glEnable(GL_LIGHTING);
 }
 
 Object* createObject(ParametricObjFunc paramObjFunc, int x, int y, ...)
@@ -90,7 +158,7 @@ Object* createObject(ParametricObjFunc paramObjFunc, int x, int y, ...)
 	int numIndices;
 	Object* obj;
 #define INDEX(I, J) ((I)*y + (J))
-	
+
 	/* Initialize data */
 	numVertices = x * y;
 	numIndices = (y-1) * (x * 2 + 2);
@@ -108,7 +176,7 @@ Object* createObject(ParametricObjFunc paramObjFunc, int x, int y, ...)
 			vertices[INDEX(i, j)] = paramObjFunc(u, v, &args);
 		}
 	}
-	
+
 	/* Construct index data */
 	for (j = 0; j < y-1; ++j)
 	{
@@ -120,27 +188,27 @@ Object* createObject(ParametricObjFunc paramObjFunc, int x, int y, ...)
 		}
 		indices[ci++] = INDEX(i-1, j+1);
 	}
-	
+
 	/* Double check the loops populated the data correctly */
 	assert(ci == numIndices);
-	
+
 	/* Create VBOs */
 	obj = (Object*)malloc(sizeof(Object));
 	glGenBuffers(1, &obj->vertexBuffer);
 	glGenBuffers(1, &obj->elementBuffer);
-	
+
 	/* Buffer the vertex data */
 	glBindBuffer(GL_ARRAY_BUFFER, obj->vertexBuffer);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex_t) * numVertices, vertices, GL_STATIC_DRAW);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	
+
 	/* Buffer the index data */
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj->elementBuffer);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(unsigned int) * numIndices, indices, GL_STATIC_DRAW);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	
+
 	/* Cleanup and return the object struct */
-  obj->numVertices = numVertices;
+	obj->numVertices = numVertices;
 	obj->numElements = numIndices;
 	free(vertices);
 	free(indices);
@@ -154,12 +222,12 @@ void drawObject(Object* obj)
 	glEnableClientState(GL_NORMAL_ARRAY);
 	glBindBuffer(GL_ARRAY_BUFFER, obj->vertexBuffer);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj->elementBuffer);
-	
+
 	/* Draw object */
 	glVertexPointer(3, GL_FLOAT, sizeof(vertex_t), (void*)0);
 	glNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)sizeof(vector_t));
 	glDrawElements(GL_TRIANGLE_STRIP, obj->numElements, GL_UNSIGNED_INT, (void*)0);
-	
+
 	/* Unbind/disable arrays. could also push/pop enables */
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
@@ -174,13 +242,13 @@ void drawNormals(Object* obj)
 	//glEnableClientState(GL_NORMAL_ARRAY);
 	glBindBuffer(GL_ARRAY_BUFFER, obj->vertexBuffer);
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, obj->elementBuffer);
-	
+
 	/* Draw object */
 	glVertexPointer(3, GL_FLOAT, 0, (void *) 0);
 	//glNormalPointer(GL_FLOAT, sizeof(vertex_t), (void*)sizeof(vector_t));
 	//glDrawArray(GL_LINES, obj->numVertices * 2, GL_UNSIGNED_INT, (void*)0);
 	glDrawArrays(GL_LINES, 0, obj->numVertices * 2);
-	
+
 	/* Unbind/disable arrays. could also push/pop enables */
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);

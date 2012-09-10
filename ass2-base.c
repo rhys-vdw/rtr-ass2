@@ -271,6 +271,8 @@ void display(SDL_Surface *surface)
 		glUseProgram(shader); /* Use our shader for future rendering */
 	drawObject(object);
   drawNormals(object);
+	drawAxes(0,0,0,2);
+	//drawGrid();Test Grid to compare normals against current Grid
 	glUseProgram(0);
 
 	/* Draw framerate */

@@ -15,5 +15,8 @@
 *.swo
 *.swp
 
+# Gedit temporary files
+*~
+
 # Executable
 ass2-base
