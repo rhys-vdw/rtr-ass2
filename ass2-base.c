@@ -70,8 +70,8 @@ char object_names[3][8] = { "Torus", "Sphere", "Wave" };
 static float light0_directional[] = {2.0, 2.0, 2.0, 0.0};
 static float light0_point[]= {2.0, 2.0, 2.0, 1.0};
 //static float light0_ambient[] = {0.5, 0.5, 0.5, 1.0};//Brief asks for defaults
-//static float light0_diffuse[] = {1.0, 1.0, 1.0, 1.0};
-//static float light0_specular[] = {1.0, 1.0, 1.0, 1.0};
+//static float light0_diffuse[] = {1.0, 1.0, 1.0, 1.0};//defaults are defaults
+//static float light0_specular[] = {1.0, 1.0, 1.0, 1.0};//and work by default
 static float material_ambient[] = {0.5, 0.5, 0.5, 1.0};
 static float material_diffuse[] = {1.0, 0.0, 0.0, 1.0};
 static float material_specular[] = {1.0, 1.0, 1.0, 1.0};
@@ -83,6 +83,11 @@ void update_renderstate()
 		glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
 	else
 		glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 0.0);
+
+	if (renderstate.lighting)
+		glEnable(GL_LIGHTING);
+	else
+		glDisable(GL_LIGHTING);
 
 	
 
@@ -271,7 +276,7 @@ void display(SDL_Surface *surface)
 	/* Clear the colour and depth buffer */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/* Camera transformation */
+	/* Load indentity*/
 	glLoadIdentity();
 
 
@@ -282,17 +287,25 @@ void display(SDL_Surface *surface)
 	else
 		glLightfv(GL_LIGHT0, GL_POSITION, light0_point);
 
-	/* Draw the scene */
+	/* Camera transformation - called later so it is static */
 	glTranslatef(0, 0, -camera_zoom);
 	glRotatef(-camera_pitch, 1, 0, 0);
 	glRotatef(-camera_heading, 0, 1, 0);
+
+
+	/*Turn on Shaders if applicable*/
 	if (renderstate.shaders)
 		glUseProgram(shader); /* Use our shader for future rendering */
+
+	/* Draw the scene */
 	drawObject(object);
 	//drawNormals(object);
-	drawAxes(0,0,0,2);
-	//drawGrid();//Test Grid to compare normals against current Grid
+
+	/*turns shaders off*/
 	glUseProgram(0);
+
+	/*drawAxes once shader is turned off*/
+	drawAxes(0,0,0,2);
 
 	/* Draw framerate */
 	draw_framerate(surface);
