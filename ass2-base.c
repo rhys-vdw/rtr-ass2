@@ -56,7 +56,8 @@ static struct {
 	int shaders;
 	int osd;
 	int object;
-	int lightMode; //direction lighting / point light
+	int lightType; //direction lighting / point light
+	int lightModel;
 } renderstate;
 
 enum Object {
@@ -69,8 +70,8 @@ char object_names[3][8] = { "Torus", "Sphere", "Wave" };
 static float light0_directional[] = {2.0, 2.0, 2.0, 0.0};
 static float light0_point[]= {2.0, 2.0, 2.0, 1.0};
 //static float light0_ambient[] = {0.5, 0.5, 0.5, 1.0};//Brief asks for defaults
-//static float light0_diffuse[] = {1.0, 1.0, 1.0, 1.0};
-//static float light0_specular[] = {1.0, 1.0, 1.0, 1.0};
+//static float light0_diffuse[] = {1.0, 1.0, 1.0, 1.0};//defaults are defaults
+//static float light0_specular[] = {1.0, 1.0, 1.0, 1.0};//and work by default
 static float material_ambient[] = {0.5, 0.5, 0.5, 1.0};
 static float material_diffuse[] = {1.0, 0.0, 0.0, 1.0};
 static float material_specular[] = {1.0, 1.0, 1.0, 1.0};
@@ -78,10 +79,17 @@ static float material_shininess = 64;
 
 void update_renderstate()
 {
+	if (renderstate.lightModel)
+		glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, GL_TRUE);
+	else
+		glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, 0.0);
+
 	if (renderstate.lighting)
 		glEnable(GL_LIGHTING);
 	else
 		glDisable(GL_LIGHTING);
+
+	
 
 	glPolygonMode(GL_FRONT_AND_BACK, renderstate.wireframe ? GL_LINE : GL_FILL);
 
@@ -131,6 +139,8 @@ void init()
 	glClearColor(0, 0, 0, 0);
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_DEPTH_TEST);
+
+	
 	glEnable(GL_LIGHT0);
 
 	//glLightfv(GL_LIGHT0, GL_AMBIENT, light0_ambient);
@@ -156,7 +166,8 @@ void init()
 	renderstate.lighting = 1;
 	renderstate.shaders = 0;
 	renderstate.osd = 1;
-	renderstate.lightMode = 1;
+	renderstate.lightType = 1;
+	renderstate.lightModel = 1;
 
 	update_renderstate();
 
@@ -252,10 +263,10 @@ void draw_osd(SDL_Surface *surface)
 			/* shaders */
 			renderstate.shaders ? "enabled" : "disabled", // shaders
 			tessellation,
-			"todo", // local viewer
+			renderstate.lightModel ? "enabled" : "disabled", // local viewer
 			/* wireframe */
 			renderstate.wireframe ? "enabled" : "disabled",
-			renderstate.lightMode ? "directional" : "point"
+			renderstate.lightType ? "directional" : "point"
 			);
 	draw_text(surface, buffer, 0, 30);
 }
@@ -265,28 +276,36 @@ void display(SDL_Surface *surface)
 	/* Clear the colour and depth buffer */
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	/* Camera transformation */
+	/* Load indentity*/
 	glLoadIdentity();
 
 
 	/* Set the light position (gets multiplied by the modelview matrix) */
 	//glLightfv(GL_LIGHT0, GL_POSITION, light0_position);
-	if (renderstate.lightMode)
+	if (renderstate.lightType)
 		glLightfv(GL_LIGHT0, GL_POSITION, light0_directional);
 	else
 		glLightfv(GL_LIGHT0, GL_POSITION, light0_point);
 
-	/* Draw the scene */
+	/* Camera transformation - called later so it is static */
 	glTranslatef(0, 0, -camera_zoom);
 	glRotatef(-camera_pitch, 1, 0, 0);
 	glRotatef(-camera_heading, 0, 1, 0);
+
+
+	/*Turn on Shaders if applicable*/
 	if (renderstate.shaders)
 		glUseProgram(shader); /* Use our shader for future rendering */
+
+	/* Draw the scene */
 	drawObject(object);
 	//drawNormals(object);
-	drawAxes(0,0,0,2);
-	//drawGrid();//Test Grid to compare normals against current Grid
+
+	/*turns shaders off*/
 	glUseProgram(0);
+
+	/*drawAxes once shader is turned off*/
+	drawAxes(0,0,0,2);
 
 	/* Draw framerate */
 	draw_framerate(surface);
@@ -352,8 +371,13 @@ void event(SDL_Event *event)
 			update_renderstate();
 			break;
 		case SDLK_k:
-			renderstate.lightMode = !renderstate.lightMode;
-			printf("Light Mode %i\n", renderstate.lightMode);
+			renderstate.lightType = !renderstate.lightType;
+			printf("Light Mode %i\n", renderstate.lightType);
+			update_renderstate();
+			break;
+		case SDLK_v:
+			renderstate.lightModel = !renderstate.lightModel;
+			printf("Local Viewer %i\n", renderstate.lightModel);
 			update_renderstate();
 			break;
 		case SDLK_t:
@@ -377,7 +401,6 @@ void event(SDL_Event *event)
 		case SDLK_h:
 			if ((key_state[SDLK_LSHIFT] || key_state[SDLK_RSHIFT]))
 			{
-
 				if (material_shininess < 128)
 				{
 					printf("keypress\n");
@@ -388,7 +411,6 @@ void event(SDL_Event *event)
 			}
 			else
 			{
-				
 				if (material_shininess > 16)
 				{
 					printf("keypress\n");

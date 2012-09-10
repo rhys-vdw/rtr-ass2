@@ -132,7 +132,9 @@ printf("nx: %f, ny: %f, nz: %f", x, z, 1/m);
 void drawAxes(float x,float y,float z,float length)
 {
 	glDisable(GL_DEPTH_TEST);
+	glPushAttrib(GL_ENABLE_BIT);
 	glDisable(GL_LIGHTING);
+	
 	glBegin(GL_LINES);
 		glColor3f(1, 0, 0);
 		glVertex3f(x,y, z);
@@ -144,7 +146,8 @@ void drawAxes(float x,float y,float z,float length)
 		glVertex3f(x,y, z);
 		glVertex3f(x,y, z+length);
 	glEnd();
-	glEnable(GL_LIGHTING);
+
+	glPopAttrib();
 	glEnable(GL_DEPTH_TEST);
 }
 
