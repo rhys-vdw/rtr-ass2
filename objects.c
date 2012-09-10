@@ -80,53 +80,13 @@ vertex_t parametricWave(float u, float v, va_list* args)
 	return ret;
 }
 
-void drawGrid()
-{
-	float pi = acosf(-1.0f);
-	float i;
-	float j;
-	float y;
-	float x;
-	float z;
-	float m;
-	//int offset = -GRID_SIZE/2;
-	//float anim = 1;
-	glColor4f(0, 0, 1,1);
-	float incr = .1;
-	float amp = .05;
-	float freq = 10;
+vertex_t paramtericGrid(float u, float v, va_list *args) {
+	vertex_t ret;
 
-	for (j = -1; j <= 1; j += incr)//creates strips from beginning to end
-	{
-	glBegin(GL_TRIANGLE_STRIP);
-		for (i = -3; i <= -1; i += incr)//creates a strip from beginning to end
-		{
-		//first vertex start
-			y = pi*amp*(sin(freq*i)*sin(freq*j));
-			//normals for vertex 1
-			x = -pi*amp*cos(freq*i)*sin(freq*j);
-			z = -pi*amp*sin(freq*i)*cos(freq*j);
-			m = sqrt(x*x+z*z+1);
-			glNormal3f(x/m,z/m,1/m);
-			//end normals for vertex 1
-			glVertex3f(i,j,y);
-		//first vertex end
-		//second vertex start - same as above but incremented to create a increment wide strip
-			y =	pi*amp*(sin(freq*i)*sin(freq*(j+incr)));
-			//normals for vertex 2
-			x = -pi*amp*cos(freq*i)*sin(freq*(j+incr));
-			z = -pi*amp*sin(freq*i)*cos(freq*(j+incr));
+	ret.vert.x = u;
+	ret.vert.y = v;
 
-			m = sqrt(x*x+z*z+1);
-			glNormal3f(x/m,z/m,1/m);
-			//end normals for vertex 2
-			glVertex3f(i,j+incr,y);
-		//second vertex end
-		}
-printf("nx: %f, ny: %f, nz: %f", x, z, 1/m);
-	glEnd();
-	}
-
+	return ret;
 }
 
 void drawAxes(float x,float y,float z,float length)
@@ -134,7 +94,7 @@ void drawAxes(float x,float y,float z,float length)
 	glDisable(GL_DEPTH_TEST);
 	glPushAttrib(GL_ENABLE_BIT);
 	glDisable(GL_LIGHTING);
-	
+
 	glBegin(GL_LINES);
 		glColor3f(1, 0, 0);
 		glVertex3f(x,y, z);
