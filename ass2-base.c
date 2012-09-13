@@ -120,7 +120,7 @@ void regenerate_geometry()
 	/* Free previous object */
 	if (object) freeObject(object);
 
-	printf("Generating %ix%i... ", subdivs, subdivs);
+	//printf("Generating %ix%i... ", subdivs, subdivs);
 	fflush(stdout);
 
 	/* Generate the new object. NOTE: different equations require different arguments. see objects.h */

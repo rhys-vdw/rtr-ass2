@@ -31,8 +31,6 @@ void main(void) {
 	const int Phong = 0;
 	const int BlinnPhong = 1;
 
-	float u = gl_Vertex.x * 2.0 * M_PI;
-	float v = gl_Vertex.y * 2.0 * M_PI;
 
 	vec4 vertex;
 
@@ -40,6 +38,9 @@ void main(void) {
 
 		const float R = 1.0;
 		const float r = 0.5;
+
+		float u = gl_Vertex.x * 2.0 * M_PI;
+		float v = gl_Vertex.y * 2.0 * M_PI;
 
 		normal = vec3(
 				cos(u) * cos(v),
@@ -59,6 +60,9 @@ void main(void) {
 		const float Amplitude = 0.2;
 		const float Frequency = 5.0;
 
+		float u = gl_Vertex.x;
+		float v = gl_Vertex.y;
+
 		float phi = M_PI * Frequency * u;
 		float theta = M_PI * Frequency * v;
 
@@ -70,11 +74,11 @@ void main(void) {
 		normal = vec3(
 				x / m,
 				y / m,
-				z / m);
+				1 / m);
 
 		vertex = vec4(
-				(1.0 - u) * Width - 1.0,
-				v * Height - 1.0,
+				(u - 0.5) * Width,
+				(v - 0.5) * Height,
 				z,
 				1);
 	}
