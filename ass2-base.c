@@ -65,7 +65,9 @@ static struct {
 	int object;
 	int lightType; //direction lighting / point light
 	int lightModel;
+	int specularMode;
 	int shading;
+	int perPixel;
 } renderstate;
 
 enum Object {
@@ -151,7 +153,7 @@ void init()
 	glewInit();
 
 	/* Load the shader */
-	shader = getShader("mesh-generation.vert", "phong-pixel.frag");
+	shader = getShader("mesh-generation.vert", "shader.frag");
 
 	uniform.object = glGetUniformLocation(shader, "object");
 	uniform.lightingModel = glGetUniformLocation(shader, "lightingModel");
@@ -265,10 +267,10 @@ void draw_osd(SDL_Surface *surface)
 			"[g]   - model: %s\n" //torus, wave
 			"[H/h] - shininess: %d\n" //increase/decrease
 			"[l]   - lighting: %s\n" //toggle
-			"[m]   - specular lighting model: %s\n" //Blinn-Phong or Phong
+			"[m]   - specular mode: %s\n" //Blinn-Phong or Phong
 			"[n]   - normals: %s\n" //enabled/disabled
 			"[o]   - OSD option: %s\n" //cycle through
-			"[p]   - lighting mode: %s\n" //per vertex/per pixel
+			"[p]   - per pixel lighting: %s\n" //per vertex/per pixel
 			"[s]   - shaders: %s\n"
 			"[T/t] - tessellation: %d\n" //increase/decrease
 			"[v]   - local viewer: %s\n"
@@ -278,12 +280,11 @@ void draw_osd(SDL_Surface *surface)
 			"todo",   // shading
 			object_names[renderstate.object],   // model
 			(int) material_shininess,          // shininess
-			/* lighting */
 			renderstate.lighting ? "enabled" : "disabled",
-			"todo", // specular lighting model
+			renderstate.specularMode ? "Phong" : "Blinn-Phong",
 			"todo", // normals
 			"enabled", // OSD option
-			"todo", // lighting mode
+			renderstate.perPixel ? "enabled" : "disabled", // lighting mode
 			/* shaders */
 			renderstate.shaders ? "enabled" : "disabled", // shaders
 			tessellation,
@@ -322,9 +323,9 @@ void display(SDL_Surface *surface)
 		glUseProgram(shader); /* Use our shader for future rendering */
 
 		glUniform1i(uniform.object, renderstate.object);
-		glUniform1i(uniform.lightingModel, renderstate.lightModel);
-		glUniform1i(uniform.isLocalViewer, 1);
-		glUniform1i(uniform.isPerPixelLighting, 1);
+		glUniform1i(uniform.lightingModel, renderstate.specularMode);
+		glUniform1i(uniform.isLocalViewer, renderstate.lightModel);
+		glUniform1i(uniform.isPerPixelLighting, renderstate.perPixel);
 	}
 
 	/* Draw the scene */
@@ -399,49 +400,6 @@ void event(SDL_Event *event)
 			printf("Changed shading mode %i\n", renderstate.shading);
 			update_renderstate();
 			break;
-		case SDLK_l:
-			renderstate.lighting = !renderstate.lighting;
-			printf("Lighting %i\n", renderstate.lighting);
-			update_renderstate();
-			break;
-		case SDLK_o:
-			renderstate.osd = !renderstate.osd;
-			printf("OSD %i\n", renderstate.osd);
-			update_renderstate();
-			break;
-		case SDLK_w:
-			renderstate.wireframe = !renderstate.wireframe;
-			printf("Wireframe %i\n", renderstate.wireframe);
-			update_renderstate();
-			break;
-		case SDLK_k:
-			renderstate.lightType = !renderstate.lightType;
-			printf("Light Mode %i\n", renderstate.lightType);
-			update_renderstate();
-			break;
-		case SDLK_v:
-			renderstate.lightModel = !renderstate.lightModel;
-			printf("Local Viewer %i\n", renderstate.lightModel);
-			update_renderstate();
-			break;
-		case SDLK_t:
-			if ((key_state[SDLK_LSHIFT] || key_state[SDLK_RSHIFT]))
-			{
-				if (tessellation < max_tess)
-				{
-					++tessellation;
-					regenerate_geometry();
-				}
-			}
-			else
-			{
-				if (tessellation > min_tess)
-				{
-					--tessellation;
-					regenerate_geometry();
-				}
-			}
-			break;
 		case SDLK_h:
 			if ((key_state[SDLK_LSHIFT] || key_state[SDLK_RSHIFT]))
 			{
@@ -463,6 +421,58 @@ void event(SDL_Event *event)
 					printf("shininess: %f\n", material_shininess);
 				}
 			}
+			break;
+		case SDLK_k:
+			renderstate.lightType = !renderstate.lightType;
+			printf("Light Mode %i\n", renderstate.lightType);
+			update_renderstate();
+			break;
+		case SDLK_l:
+			renderstate.lighting = !renderstate.lighting;
+			printf("Lighting %i\n", renderstate.lighting);
+			update_renderstate();
+			break;
+		case SDLK_m:
+			renderstate.specularMode = !renderstate.specularMode;
+			printf("Specular Mode %i\n", renderstate.specularMode);
+			update_renderstate();
+			break;
+		case SDLK_o:
+			renderstate.osd = !renderstate.osd;
+			printf("OSD %i\n", renderstate.osd);
+			update_renderstate();
+			break;
+		case SDLK_p:
+			renderstate.perPixel = !renderstate.perPixel;
+			printf("Per pixel %i\n", renderstate.perPixel);
+			break;
+		case SDLK_t:
+			if ((key_state[SDLK_LSHIFT] || key_state[SDLK_RSHIFT]))
+			{
+				if (tessellation < max_tess)
+				{
+					++tessellation;
+					regenerate_geometry();
+				}
+			}
+			else
+			{
+				if (tessellation > min_tess)
+				{
+					--tessellation;
+					regenerate_geometry();
+				}
+			}
+			break;
+		case SDLK_v:
+			renderstate.lightModel = !renderstate.lightModel;
+			printf("Local Viewer %i\n", renderstate.lightModel);
+			update_renderstate();
+			break;
+		case SDLK_w:
+			renderstate.wireframe = !renderstate.wireframe;
+			printf("Wireframe %i\n", renderstate.wireframe);
+			update_renderstate();
 			break;
 		default:
 			break;
