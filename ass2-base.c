@@ -49,6 +49,13 @@ static char key_state[1024];
 /* The opengl handle to our shader */
 GLuint shader = 0;
 
+static struct {
+	GLuint object;
+	GLuint lightingModel;
+	GLuint isLocalViewer;
+	GLuint isPerPixelLighting;
+} uniform;
+
 /* Store render state variables.  Can be toggled with function keys. */
 static struct {
 	int wireframe;
@@ -58,6 +65,7 @@ static struct {
 	int object;
 	int lightType; //direction lighting / point light
 	int lightModel;
+	int shading;
 } renderstate;
 
 enum Object {
@@ -77,6 +85,9 @@ static float material_diffuse[] = {1.0, 0.0, 0.0, 1.0};
 static float material_specular[] = {1.0, 1.0, 1.0, 1.0};
 static float material_shininess = 64;
 
+//time
+static double time_s;
+
 void update_renderstate()
 {
 	if (renderstate.lightModel)
@@ -89,7 +100,10 @@ void update_renderstate()
 	else
 		glDisable(GL_LIGHTING);
 
-	
+	if (renderstate.shading)
+		glShadeModel(GL_SMOOTH);
+	else
+		glShadeModel(GL_FLAT);
 
 	glPolygonMode(GL_FRONT_AND_BACK, renderstate.wireframe ? GL_LINE : GL_FILL);
 
@@ -121,7 +135,7 @@ void regenerate_geometry()
 				break;
 			default:
 				assert(renderstate.object == WAVE);
-				object = createObject(parametricWave, subdivs + 1, subdivs + 1, 2.0, 2.0);
+				object = createObject(parametricWave, subdivs + 1, subdivs + 1, 2.0, 2.0, time_s);
 		}
 	}
 
@@ -137,7 +151,12 @@ void init()
 	glewInit();
 
 	/* Load the shader */
-	shader = getShader("mesh-generation.vert", "blinn-phong-pixel.frag");
+	shader = getShader("mesh-generation.vert", "phong-pixel.frag");
+
+	uniform.object = glGetUniformLocation(shader, "object");
+	uniform.lightingModel = glGetUniformLocation(shader, "lightingModel");
+	uniform.isLocalViewer = glGetUniformLocation(shader, "isLocalViewer");
+	uniform.isPerPixelLighting = glGetUniformLocation(shader, "isPerPixelLighting");
 
 	/* Lighting and colours */
 	glClearColor(0, 0, 0, 0);
@@ -172,6 +191,7 @@ void init()
 	renderstate.osd = 1;
 	renderstate.lightType = 1;
 	renderstate.lightModel = 1;
+	renderstate.shading = 1;
 
 	update_renderstate();
 
@@ -298,14 +318,20 @@ void display(SDL_Surface *surface)
 
 
 	/*Turn on Shaders if applicable*/
-	if (renderstate.shaders)
+	if (renderstate.shaders) {
 		glUseProgram(shader); /* Use our shader for future rendering */
+
+		glUniform1i(uniform.object, renderstate.object);
+		glUniform1i(uniform.lightingModel, renderstate.lightModel);
+		glUniform1i(uniform.isLocalViewer, 1);
+		glUniform1i(uniform.isPerPixelLighting, 1);
+	}
 
 	/* Draw the scene */
 	drawObject(object);
 	//drawNormals(object);
 
-	/*turns shaders off*/
+	/* turn shaders off */
 	glUseProgram(0);
 
 	/*drawAxes once shader is turned off*/
@@ -318,8 +344,16 @@ void display(SDL_Surface *surface)
 	CHECKERROR;
 }
 
+
+
 void update(int milliseconds)
 {
+	static long time_ms = 0;
+	time_ms += milliseconds;
+	
+	time_s = (double) time_ms / 1000.0f;
+	if (renderstate.object == WAVE)
+		regenerate_geometry();
 }
 
 void set_mousestate(unsigned char button, int state)
@@ -359,6 +393,11 @@ void event(SDL_Event *event)
 			renderstate.shaders = !renderstate.shaders;
 			regenerate_geometry();
 			printf("Using Shaders %i\n", renderstate.shaders);
+			break;
+		case SDLK_f:
+			renderstate.shading = !renderstate.shading;
+			printf("Changed shading mode %i\n", renderstate.shading);
+			update_renderstate();
 			break;
 		case SDLK_l:
 			renderstate.lighting = !renderstate.lighting;

@@ -13,4 +13,3 @@ void main(void)
 	// apply matrix transforms to vertex position
 	gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 }
-

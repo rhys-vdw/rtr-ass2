@@ -50,7 +50,7 @@ vertex_t parametricTorus(float u, float v, va_list* args)
 
 vertex_t parametricWave(float u, float v, va_list* args)
 {
-	float width, height;
+	float width, height, time;
 	float pi = acosf(-1.0f);
 	float phi = pi * 5 * u;
 	float theta = pi * 5 * v;
@@ -59,10 +59,11 @@ vertex_t parametricWave(float u, float v, va_list* args)
 	float amp = .2;// anim = 1;
 	width = va_arg(*args, double);
 	height = va_arg(*args, double);
+	time = va_arg(*args, double);
 
-
+	//printf("%f\n",time);
 		//first vertex start
-			z = amp*(sin(theta)*sin(phi));
+			z = amp*(sin(theta+time)*sin(phi+time));
 			//normals for vertex 1
 			x = -amp*cos(theta)*sin(phi);
 			y = amp*sin(theta)*cos(phi);

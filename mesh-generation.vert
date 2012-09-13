@@ -6,34 +6,125 @@
 varying vec3 eye;
 varying vec3 normal;
 
-//uniform float R;
-//uniform float r;
+/* objects:
+ *  0 = torus
+ *  1 = wave
+ */
+uniform int object;
 
-void main(void)
-{
-	float R = 2.0;
-	float r = 0.5;
+/* lighting model:
+ *  0 = phong
+ *  1 = blinn-phong
+ */
+uniform int lightingModel;
+
+uniform bool isLocalViewer;
+uniform bool isPerPixelLighting;
+
+uniform float time;
+
+void main(void) {
+
+	const int Torus = 0;
+	const int Wave  = 1;
+
+	const int Phong = 0;
+	const int BlinnPhong = 1;
 
 	float u = gl_Vertex.x * 2.0 * M_PI;
 	float v = gl_Vertex.y * 2.0 * M_PI;
 
-	// generate torus
-	vec3 normal = vec3(
-		cos(u) * cos(v),
-		sin(u) * cos(v),
-		sin(v));
+	vec4 vertex;
 
-	vec4 vertex = vec4(
-		(R + r * cos(v)) * cos(u),
-		(R + r * cos(v)) * sin(u),
-		r * sin(v),
-		1);
+	if (object == Torus) {
 
-	// TODO: pass position and normal to fragment shaders
-	eye = normalize(vec3(gl_ModelViewMatrix * vertex));
+		const float R = 1.0;
+		const float r = 0.5;
+
+		normal = vec3(
+				cos(u) * cos(v),
+				sin(u) * cos(v),
+				sin(v));
+
+		vertex = vec4(
+				(R + r * cos(v)) * cos(u),
+				(R + r * cos(v)) * sin(u),
+				r * sin(v),
+				1);
+
+	} else /* object == Wave */ {
+
+		const float Width     = 2.0;
+		const float Height    = 2.0;
+		const float Amplitude = 0.2;
+		const float Frequency = 5.0;
+
+		float phi = M_PI * Frequency * u;
+		float theta = M_PI * Frequency * v;
+
+		float x = -Amplitude * cos(theta) * sin(phi);
+		float y =  Amplitude * sin(theta) * cos(phi);
+		float z =  Amplitude * sin(theta + time) * sin (phi +time);
+		float m = sqrt(x * x + y * y + 1.0);
+
+		normal = vec3(
+				x / m,
+				y / m,
+				z / m);
+
+		vertex = vec4(
+				(1.0 - u) * Width - 1.0,
+				v * Height - 1.0,
+				z,
+				1);
+	}
+
+	// set eye and normal vectors
+	eye = isLocalViewer ? normalize(vec3(gl_ModelViewMatrix * vertex)) : vec3(0.0, 0.0, 1.0);
 	normal = normalize(vec3(gl_NormalMatrix * normal));
+
+	// if vertex lit, set vertex color
+	if (!isPerPixelLighting) {
+
+		vec4 color = vec4(0.0);
+
+		// unit vector in direction of light, light source position/direction
+		// already transformed into eye space coordinates by modelview matrix
+		vec3 light = normalize(vec3(gl_LightSource[0].position));
+
+		// compute diffuse scalar
+		float NdotL = max(dot(normal, light), 0.0);
+
+		// add global and light ambient
+		color += gl_FrontMaterial.ambient * (gl_LightModel.ambient + gl_LightSource[0].ambient);
+
+		if (NdotL > 0.0) {
+			// add diffuse component
+			color += NdotL * gl_FrontMaterial.diffuse * gl_LightSource[0].diffuse;
+
+			// add specular color depending on light model
+			if (lightingModel == Phong) {
+
+				// calculate reflection vector
+				vec3 reflection = reflect(light, normal);
+				float RdotE = max(dot(reflection, eye), 0.0);
+
+				color += pow(RdotE, gl_FrontMaterial.shininess) *
+					gl_LightSource[0].specular * gl_FrontMaterial.specular;
+
+			} else /* lightingModel == BlinnPhong */ {
+
+				float NdotHV = max(dot(normal, gl_LightSource[0].halfVector.xyz), 0.0);
+				color += gl_FrontMaterial.specular * gl_LightSource[0].specular *
+					pow(NdotHV, gl_FrontMaterial.shininess);
+
+			}
+		}
+
+		// set the color
+		gl_FrontColor = color;
+	}
 
 	// apply matrix transforms to vertex position
 	gl_Position = gl_ModelViewProjectionMatrix * vertex;
 }
-
