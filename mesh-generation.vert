@@ -18,6 +18,12 @@ uniform int object;
  */
 uniform int lightingModel;
 
+/* light type:
+ *  0 = point
+ *  1 = directional
+ */
+uniform bool lightType;
+
 uniform bool isLocalViewer;
 uniform bool isPerPixelLighting;
 
@@ -30,7 +36,6 @@ void main(void) {
 
 	const int Phong = 0;
 	const int BlinnPhong = 1;
-
 
 	vec4 vertex;
 
@@ -84,7 +89,7 @@ void main(void) {
 	}
 
 	// set eye and normal vectors
-	eye = isLocalViewer ? normalize(vec3(gl_ModelViewMatrix * vertex)) : vec3(0.0, 0.0, 1.0);
+	eye = isLocalViewer ? normalize(vec3(gl_ModelViewMatrix * vertex)) : vec3(0.0, 0.0, -1.0);
 	normal = normalize(vec3(gl_NormalMatrix * normal));
 
 	// if vertex lit, set vertex color

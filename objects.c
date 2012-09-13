@@ -73,7 +73,7 @@ vertex_t parametricWave(float u, float v, va_list* args)
 	ret.norm.y = y / m;
 	ret.norm.z = 1 / m;
 			//end normals for vertex 1
-	ret.vert.x = (1.0f - u) * width - 1;
+	ret.vert.x = u * width - 1;
 	ret.vert.y = v * height -1;
 	ret.vert.z = z;
 

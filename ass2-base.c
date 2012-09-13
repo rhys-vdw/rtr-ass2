@@ -54,6 +54,7 @@ static struct {
 	GLuint lightingModel;
 	GLuint isLocalViewer;
 	GLuint isPerPixelLighting;
+	GLuint time;
 } uniform;
 
 /* Store render state variables.  Can be toggled with function keys. */
@@ -71,7 +72,7 @@ static struct {
 } renderstate;
 
 enum Object {
-  TORUS, SPHERE, WAVE, OBJECT_MAX
+  TORUS, WAVE, OBJECT_MAX
 };
 
 char object_names[3][8] = { "Torus", "Sphere", "Wave" };
@@ -123,8 +124,6 @@ void regenerate_geometry()
 	//printf("Generating %ix%i... ", subdivs, subdivs);
 	fflush(stdout);
 
-	/* Generate the new object. NOTE: different equations require different arguments. see objects.h */
-
 	if (renderstate.shaders) {
 		object = createObject(parametricGrid, subdivs + 1, subdivs + 1);
 	} else {
@@ -132,16 +131,13 @@ void regenerate_geometry()
 			case TORUS:
 				object = createObject(parametricTorus, subdivs + 1, subdivs + 1, 1.0, 0.5);
 				break;
-			case SPHERE:
-				object = createObject(parametricSphere, subdivs + 1, subdivs + 1, 1.0);
-				break;
 			default:
 				assert(renderstate.object == WAVE);
 				object = createObject(parametricWave, subdivs + 1, subdivs + 1, 2.0, 2.0, time_s);
 		}
 	}
 
-	printf("done.\n");
+	//printf("done.\n");
 	fflush(stdout);
 }
 
@@ -159,6 +155,7 @@ void init()
 	uniform.lightingModel = glGetUniformLocation(shader, "lightingModel");
 	uniform.isLocalViewer = glGetUniformLocation(shader, "isLocalViewer");
 	uniform.isPerPixelLighting = glGetUniformLocation(shader, "isPerPixelLighting");
+	uniform.time = glGetUniformLocation(shader, "time");
 
 	/* Lighting and colours */
 	glClearColor(0, 0, 0, 0);
@@ -275,7 +272,7 @@ void draw_osd(SDL_Surface *surface)
 			"[T/t] - tessellation: %d\n" //increase/decrease
 			"[v]   - local viewer: %s\n"
 			"[w]   - wireframe: %s\n" //enabled/disabled
-			"[k]   - light mode: %s\n", //enabled/disabled
+			"[k]   - light type: %s\n", //directional/point
 			"todo", // wave animation
 			"todo",   // shading
 			object_names[renderstate.object],   // model
@@ -326,6 +323,7 @@ void display(SDL_Surface *surface)
 		glUniform1i(uniform.lightingModel, renderstate.specularMode);
 		glUniform1i(uniform.isLocalViewer, renderstate.lightModel);
 		glUniform1i(uniform.isPerPixelLighting, renderstate.perPixel);
+		glUniform1f(uniform.time, time_s);
 	}
 
 	/* Draw the scene */
@@ -345,16 +343,15 @@ void display(SDL_Surface *surface)
 	CHECKERROR;
 }
 
-
-
 void update(int milliseconds)
 {
 	static long time_ms = 0;
 	time_ms += milliseconds;
-	
+
 	time_s = (double) time_ms / 1000.0f;
-	if (renderstate.object == WAVE)
+	if (renderstate.object == WAVE && renderstate.shaders == 0) {
 		regenerate_geometry();
+	}
 }
 
 void set_mousestate(unsigned char button, int state)
