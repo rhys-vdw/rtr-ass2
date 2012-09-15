@@ -69,6 +69,7 @@ static struct {
 	int specularMode;
 	int shading;
 	int perPixel;
+	int animate;
 } renderstate;
 
 enum Object {
@@ -191,6 +192,8 @@ void init()
 	renderstate.lightType = 1;
 	renderstate.lightModel = 1;
 	renderstate.shading = 1;
+	renderstate.animate = 0;
+
 
 	update_renderstate();
 
@@ -273,8 +276,8 @@ void draw_osd(SDL_Surface *surface)
 			"[v]   - local viewer: %s\n"
 			"[w]   - wireframe: %s\n" //enabled/disabled
 			"[k]   - light type: %s\n", //directional/point
-			"todo", // wave animation
-			"todo",   // shading
+			renderstate.animate ? "enabled" : "disabled", // shaders, // wave animation
+			renderstate.shading ? "Smooth" : "Flat",   // shading
 			object_names[renderstate.object],   // model
 			(int) material_shininess,          // shininess
 			renderstate.lighting ? "enabled" : "disabled",
@@ -288,8 +291,7 @@ void draw_osd(SDL_Surface *surface)
 			renderstate.lightModel ? "enabled" : "disabled", // local viewer
 			/* wireframe */
 			renderstate.wireframe ? "enabled" : "disabled",
-			renderstate.lightType ? "directional" : "point"
-			);
+			renderstate.lightType ? "directional" : "point"); // lighting mode
 	draw_text(surface, buffer, 0, 30);
 }
 
@@ -346,11 +348,13 @@ void display(SDL_Surface *surface)
 void update(int milliseconds)
 {
 	static long time_ms = 0;
-	time_ms += milliseconds;
-
-	time_s = (double) time_ms / 1000.0f;
-	if (renderstate.object == WAVE && renderstate.shaders == 0) {
-		regenerate_geometry();
+	if (renderstate.animate &&
+			renderstate.object == WAVE) {
+		time_ms += milliseconds;
+		time_s = (double) time_ms / 1000.0f;
+		if (renderstate.shaders == 0) {
+			regenerate_geometry();
+		}
 	}
 }
 
@@ -381,6 +385,10 @@ void event(SDL_Event *event)
 		{
 		case SDLK_ESCAPE:
 			quit();
+			break;
+		case SDLK_a:
+			renderstate.animate = !renderstate.animate;
+			printf("Wave Animate %i\n", renderstate.animate);
 			break;
 		case SDLK_g:
 			renderstate.object = (renderstate.object + 1) % OBJECT_MAX;
